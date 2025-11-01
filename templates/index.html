@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Media Tools</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #1e3a8a, #3b82f6, #93c5fd); }
+    .glass { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); }
+    .file-input input[type="file"] { display: none; }
+    .option-card { transition: all 0.3s ease; cursor: pointer; }
+    .option-card.active { background: linear-gradient(135deg, #2563eb, #3b82f6); transform: scale(1.03); }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+  <div class="glass w-full max-w-2xl rounded-3xl shadow-2xl p-8 text-white">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-3xl font-bold">Welcome, {{ user.username }}</h2>
+      <a href="/logout" class="text-white-300 hover:text-white-500 font-semibold transition">Logout</a>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+      <div class="flex flex-col gap-3">
+        <label class="text-sm uppercase tracking-wide text-gray-100 font-semibold">Upload File</label>
+        <div class="file-input flex flex-col items-center justify-center p-6 border-2 border-dashed border-blue-300 rounded-2xl bg-white/10 hover:bg-white/20 transition cursor-pointer relative">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-blue-200 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.9 4 4 0 017.76 0A4 4 0 0117 16m-5 4v-8m0 0l-3 3m3-3l3 3" />
+          </svg>
+          <span id="file-name" class="text-gray-200 mb-1">No file chosen</span>
+          <label for="file" class="bg-gradient-to-r from-blue-600 to-blue-400 text-white font-semibold py-2 px-6 rounded-full shadow-lg hover:from-blue-500 hover:to-blue-300 transition transform hover:scale-105 cursor-pointer">Choose File</label>
+          <input id="file" type="file" name="file" required onchange="updateFileName(event)">
+        </div>
+      </div>
+
+      <label class="text-sm uppercase tracking-wide text-gray-100 font-semibold">Select Operation</label>
+      <input type="hidden" name="operation" id="operation" value="convert">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
+        <div class="option-card glass p-3 rounded-xl text-center hover:bg-blue-500/40" data-op="convert" onclick="selectOperation(this)">
+          <p class="font-semibold text-sm">Convert</p>
+        </div>
+        <div class="option-card glass p-3 rounded-xl text-center hover:bg-blue-500/40" data-op="extract-audio" onclick="selectOperation(this)">
+          <p class="font-semibold text-sm">Extract Audio</p>
+        </div>
+        <div class="option-card glass p-3 rounded-xl text-center hover:bg-blue-500/40" data-op="extract-video" onclick="selectOperation(this)">
+          <p class="font-semibold text-sm">Extract Video</p>
+        </div>
+        <div class="option-card glass p-3 rounded-xl text-center hover:bg-blue-500/40" data-op="thumbnail" onclick="selectOperation(this)">
+          <p class="font-semibold text-sm">Thumbnail</p>
+        </div>
+      </div>
+
+      <div id="convert-fields" class="grid grid-cols-2 gap-4 mt-4">
+        <div>
+          <label class="text-sm uppercase tracking-wide text-gray-100 font-semibold">Format</label>
+          <input type="text" name="format" id="format" value="mp4" class="w-full rounded-xl border border-gray-300 bg-white/10 text-gray-100 p-3 focus:ring-4 focus:ring-blue-400 focus:outline-none">
+        </div>
+        <div>
+          <label class="text-sm uppercase tracking-wide text-gray-100 font-semibold">Bitrate</label>
+          <input type="text" name="bitrate" id="bitrate" value="1M" class="w-full rounded-xl border border-gray-300 bg-white/10 text-gray-100 p-3 focus:ring-4 focus:ring-blue-400 focus:outline-none">
+        </div>
+      </div>
+
+      <div id="audio-fields" class="hidden grid grid-cols-2 gap-4 mt-4">
+        <div>
+          <label class="text-sm uppercase tracking-wide text-gray-100 font-semibold">Audio Format</label>
+          <input type="text" name="format" value="mp3" class="w-full rounded-xl border border-gray-300 bg-white/10 text-gray-100 p-3 focus:ring-4 focus:ring-blue-400 focus:outline-none">
+        </div>
+        <div>
+          <label class="text-sm uppercase tracking-wide text-gray-100 font-semibold">Audio Bitrate</label>
+          <input type="text" name="bitrate" value="192k" class="w-full rounded-xl border border-gray-300 bg-white/10 text-gray-100 p-3 focus:ring-4 focus:ring-blue-400 focus:outline-none">
+        </div>
+      </div>
+
+      <div id="video-fields" class="hidden grid grid-cols-2 gap-4 mt-4">
+        <div>
+          <label class="text-sm uppercase tracking-wide text-gray-100 font-semibold">Video Format</label>
+          <input type="text" name="format" value="mp4" class="w-full rounded-xl border border-gray-300 bg-white/10 text-gray-100 p-3 focus:ring-4 focus:ring-blue-400 focus:outline-none">
+        </div>
+        <div>
+          <label class="text-sm uppercase tracking-wide text-gray-100 font-semibold">Video Bitrate</label>
+          <input type="text" name="bitrate" value="1M" class="w-full rounded-xl border border-gray-300 bg-white/10 text-gray-100 p-3 focus:ring-4 focus:ring-blue-400 focus:outline-none">
+        </div>
+      </div>
+
+      <div id="thumbnail-fields" class="hidden mt-4">
+        <label class="text-sm uppercase tracking-wide text-gray-100 font-semibold">Thumbnail Time (HH:MM:SS)</label>
+        <input type="text" name="time" value="00:00:01" class="w-full rounded-xl border border-gray-300 bg-white/10 text-gray-100 p-3 focus:ring-4 focus:ring-blue-400 focus:outline-none">
+      </div>
+
+      <button type="submit" class="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-400 text-white font-semibold py-3 rounded-xl shadow-lg hover:from-blue-500 hover:to-blue-300 transition transform hover:scale-[1.02]">
+        Run Operation
+      </button>
+    </form>
+
+    {% if download_url %}
+      <div class="mt-6 p-4 bg-green-500/20 border border-green-400/40 rounded-xl text-center text-green-200">
+        Task complete:
+        <a href="{{ download_url }}" class="underline font-semibold text-green-100 hover:text-white">Download</a>
+      </div>
+    {% elif error %}
+      <div class="mt-6 p-4 bg-red-500/20 border border-red-400/40 rounded-xl text-center text-red-200">
+        Error: {{ error }}
+      </div>
+    {% endif %}
+
+    <h3 class="text-2xl font-semibold mt-10 mb-3 border-b border-white/30 pb-2">Your Tasks</h3>
+    <div class="overflow-hidden rounded-2xl border border-white/30">
+      <table class="w-full text-sm text-gray-200">
+        <thead class="bg-white/10 text-gray-100 uppercase text-xs">
+          <tr>
+            <th class="p-3 text-left">Operation</th>
+            <th class="p-3 text-left">Filename</th>
+            <th class="p-3 text-left">Format</th>
+            <th class="p-3 text-left">Bitrate</th>
+            <th class="p-3 text-left">Date</th>
+            <th class="p-3 text-left">Download</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in conversions %}
+          <tr class="odd:bg-white/5 even:bg-white/10 hover:bg-blue-500/20 transition">
+            <td class="p-3 capitalize">{{ c.operation }}</td>
+            <td class="p-3">{{ c.filename }}</td>
+            <td class="p-3">{{ c.format }}</td>
+            <td class="p-3">{{ c.bitrate }}</td>
+            <td class="p-3">{{ c.timestamp.strftime("%Y-%m-%d %H:%M") }}</td>
+            <td class="p-3">
+              <a href="/download/{{ c.output_filename }}" class="text-blue-300 hover:text-blue-100 underline font-semibold">Download</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    function updateFileName(e) {
+      document.getElementById("file-name").textContent = e.target.files[0]?.name || "No file chosen";
+    }
+
+    function selectOperation(el) {
+      document.querySelectorAll(".option-card").forEach(card => card.classList.remove("active"));
+      el.classList.add("active");
+      const op = el.getAttribute("data-op");
+      document.getElementById("operation").value = op;
+      toggleInputs(op);
+    }
+
+    function toggleInputs(op) {
+      document.getElementById("convert-fields").classList.add("hidden");
+      document.getElementById("audio-fields").classList.add("hidden");
+      document.getElementById("video-fields").classList.add("hidden");
+      document.getElementById("thumbnail-fields").classList.add("hidden");
+
+      if (op === "convert") document.getElementById("convert-fields").classList.remove("hidden");
+      else if (op === "extract-audio") document.getElementById("audio-fields").classList.remove("hidden");
+      else if (op === "extract-video") document.getElementById("video-fields").classList.remove("hidden");
+      else if (op === "thumbnail") document.getElementById("thumbnail-fields").classList.remove("hidden");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const defaultOp = document.querySelector(`[data-op="${document.getElementById("operation").value}"]`);
+      if (defaultOp) defaultOp.classList.add("active");
+    });
+  </script>
+</body>
+</html>
