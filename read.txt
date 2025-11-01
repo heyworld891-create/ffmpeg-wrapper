@@ -1,1 +1,1 @@
-Make a folder called ffmpeg and download ffmpeg.exe and put it there.
+Make a folder called ffmpeg to the api folder and download ffmpeg.exe and put it there.
